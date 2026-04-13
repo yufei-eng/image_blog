@@ -1,0 +1,9 @@
+{
+  "compass_api": {
+    "base_url": "http://beeai.test.shopee.io/inbeeai/compass-api/v1",
+    "service_name": "erhe-pm-aigc",
+    "client_token": "YOUR_TOKEN_HERE",
+    "understanding_model": "gemini-3-pro-preview",
+    "generation_model": "gemini-3.1-flash-image-preview"
+  }
+}
