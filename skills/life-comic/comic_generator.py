@@ -60,55 +60,55 @@ def _load_image_bytes(path: str, max_pixels: int = 800 * 800) -> Tuple[bytes, st
 
 # ── Step 1: Generate storyboard and narrative ──
 
-STORYBOARD_PROMPT = """你是一位温暖治愈系的漫画编剧。基于以下照片分析数据（从真实照片中提取），创作一个生活漫画的分镜脚本和情感叙事。
+STORYBOARD_PROMPT = """You are a warm, heartfelt comic scriptwriter. Based on the following photo analysis data (extracted from real photos), create a life-comic storyboard script and emotional narrative.
 
-**核心要求**：
-1. 所有漫画场景必须基于真实照片内容改编，不可凭空虚构不存在的场景
-2. 情感基调：温暖治愈，可以温情也可以激情，避免过度理性
-3. 漫画风格：温暖的手绘插画风格，色彩柔和但有层次
+**Core requirements**:
+1. All comic scenes must be adapted from real photo content — never fabricate scenes that don't exist
+2. Emotional tone: warm and heartfelt, can be tender or passionate, avoid being overly detached
+3. Comic style: warm hand-drawn illustration, soft but layered colors
 
-**主题创意要求（极其重要）**：
-- 主题必须有创意和个性，不要使用"烟火""烟火气""人间烟火"等过于常见的词汇
-- 从照片场景中提炼独特的情感主题，例如：探索与发现、味蕾的旅行、光与影的对话、城市呼吸、漫步者日记、味觉地图、屋檐下的故事等
-- 标题风格可以诗意、可以俏皮、可以哲理，但不要千篇一律
+**Theme creativity requirements (extremely important)**:
+- The theme must be creative and distinctive. Avoid generic clichés
+- Extract unique emotional themes from the photo scenes, for example: discovery & wonder, a culinary journey, dialogue of light & shadow, city rhythms, a wanderer's diary, flavor atlas, stories under the eaves, etc.
+- Title style can be poetic, playful, or philosophical, but never repetitive
 
-**精选漫画素材**（按评分排序的高光时刻）：
+**Selected comic material** (highlight moments sorted by score):
 {panels_json}
 
-**请输出以下 JSON 结构**：
+**Output the following JSON structure**:
 
 ```json
 {{
-  "theme": "2-6字主题（如'陪你走过四季'、'烟火人间'）",
-  "emotional_arc": "一句话描述情感弧线（如：从城市到山野，从忙碌到从容）",
+  "theme": "A 2-6 word theme (e.g., 'Through the Seasons Together', 'Spice & Starlight')",
+  "emotional_arc": "One sentence describing the emotional arc (e.g., from city to wilderness, from hustle to calm)",
   "panels": [
     {{
       "panel_index": 0,
       "source_photo_index": 0,
-      "scene_description": "这个漫画分镜的详细画面描述（50-80字），包含人物、动作、环境、光线、色调",
-      "emotion_tag": "2-4字情感标签（如'暮色漫步'、'山顶远眺'）",
-      "panel_composition": "构图建议（如'俯视角/远景/特写'）"
+      "scene_description": "Detailed visual description for this comic panel (3-5 sentences), including characters, actions, environment, lighting, color tone",
+      "emotion_tag": "A 2-4 word emotion tag (e.g., 'dusk stroll', 'summit gaze')",
+      "panel_composition": "Composition suggestion (e.g., 'bird's-eye view / wide shot / close-up')"
     }}
   ],
   "narrative": {{
-    "title": "《标题》（与theme一致，用书名号包裹）",
-    "body": "100-200字的情感叙事正文。与分镜一一呼应，为每个场景赋予情感价值。结尾要升华核心价值，引发情感共鸣。不要分段标注对应哪个分镜，而是写成连贯的散文。"
+    "title": "Title (matching the theme)",
+    "body": "A 100-200 word emotional narrative. Correspond to each panel, giving each scene emotional value. End with an uplifting reflection that resonates. Write as cohesive prose, not a labeled list."
   }},
-  "footer_date": "YYYY年MM月DD日"
+  "footer_date": "YYYY-MM-DD"
 }}
 ```
 
-**注意**：
-- panels 数组的 source_photo_index 对应输入素材的索引
-- scene_description 是给漫画画师的详细指令，要包含足够的视觉细节
-- narrative.body 要有文学性，避免列清单式叙述"""
+**Notes**:
+- panels array source_photo_index corresponds to the input material index
+- scene_description is a detailed instruction for the comic artist — include sufficient visual detail
+- narrative.body should have literary quality — avoid list-style writing"""
 
 
 def generate_storyboard(panel_moments: List[dict], date_str: Optional[str] = None) -> dict:
     """Generate storyboard script and narrative text."""
     from datetime import date
     if not date_str:
-        date_str = date.today().strftime("%Y年%m月%d日")
+        date_str = date.today().strftime("%Y-%m-%d")
 
     cfg = _load_config()
     client = _get_client(cfg)
@@ -208,7 +208,7 @@ def generate_comic_image(
 
     panels = storyboard.get("panels", [])
     panel_count = len(panels)
-    theme = storyboard.get("theme", "生活漫画")
+    theme = storyboard.get("theme", "Life Comic")
     emotional_arc = storyboard.get("emotional_arc", "")
 
     if panel_count <= 4:
@@ -286,16 +286,16 @@ def _fallback_storyboard(panels: List[dict], date_str: str) -> dict:
             "panel_index": i,
             "source_photo_index": i,
             "scene_description": p.get("comic_panel_desc", p.get("scene_summary", "")),
-            "emotion_tag": p.get("emotion", "温暖"),
-            "panel_composition": "中景",
+            "emotion_tag": p.get("emotion", "warmth"),
+            "panel_composition": "medium shot",
         })
     return {
-        "theme": "生活片段",
-        "emotional_arc": "日常中的美好",
+        "theme": "Life Fragments",
+        "emotional_arc": "Beauty found in the everyday",
         "panels": panel_list,
         "narrative": {
-            "title": "《生活片段》",
-            "body": "每一个平凡的日子里，都藏着值得铭记的温柔时刻。"
+            "title": "Life Fragments",
+            "body": "In every ordinary day, there are gentle moments worth remembering."
         },
         "footer_date": date_str,
     }

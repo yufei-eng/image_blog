@@ -31,47 +31,47 @@ def _get_client(cfg: dict):
     return genai.Client(api_key=token, http_options=types.HttpOptions(base_url=base_url))
 
 
-BLOG_GENERATION_PROMPT = """你是一位兼具文艺气质和生活美学的内容创作者。基于以下照片分析数据，生成一篇"图文Blog"。
+BLOG_GENERATION_PROMPT = """You are a content creator with both artistic sensibility and lifestyle aesthetics. Based on the following photo analysis data, generate a "Photo Blog" post.
 
-**核心要求**：
-1. 所有内容必须严格基于照片分析中描述的真实场景，绝不虚构
-2. 文风温暖感性，带有文艺气息，避免流水账式平铺直叙
-3. 强化情感共鸣，让读者感受到场景的温度
+**Core requirements**:
+1. All content must be strictly based on real scenes described in the photo analysis — never fabricate
+2. Writing style: warm, evocative, with literary flair — avoid dry, chronological recounting
+3. Emphasize emotional resonance — let readers feel the warmth and atmosphere of the scenes
 
-**照片分析数据**：
+**Photo analysis data**:
 {analysis_json}
 
-**精选高光照片**（按评分排序，用于洞察模块）：
+**Selected highlight photos** (sorted by score, for the insights section):
 {highlights_json}
 
-**请输出以下 JSON 结构**：
+**Output the following JSON structure**:
 
 ```json
 {{
-  "title": "4-8字的诗意标题（如'峰林间午后'、'烟火小城记'）",
+  "title": "A poetic title of 3-6 words (e.g., 'Afternoon Among the Peaks', 'Rainy Lanes & Red Broth')",
   "hero_image_index": 0,
   "description": {{
-    "text": "60-100字的连贯叙事，包含时间、地点、人物动作、环境氛围，文艺感性风格，强化情感共鸣",
+    "text": "A coherent 2-4 sentence narrative covering time, place, actions, and atmosphere, in an evocative, warm style",
     "image_index": 0
   }},
   "insights": [
     {{
-      "text": "40-80字的洞察文本，描述这张照片的场景细节和感悟，要有画面感",
+      "text": "A 2-3 sentence insight for this photo, describing scene details and reflections with vivid imagery",
       "image_index": 0
     }}
   ],
-  "tip": "30-60字的个性化实用建议，根据场景特征（户外/室内/美食等）提供关怀性建议",
-  "footer_date": "YYYY年MM月DD日"
+  "tip": "A 1-2 sentence personalized practical tip based on the scene (outdoor/indoor/food/travel etc.)",
+  "footer_date": "YYYY-MM-DD"
 }}
 ```
 
-**注意**：
-- insights 数组最多8条，每条对应一张高光照片（image_index 对应 highlights 数组的索引）
-- hero_image_index 指向 highlights 数组中最适合做头图的照片
-- description.image_index 也指向 highlights 数组
-- title 要凝练有意境，不要太长
-- 每条 insight 的文本要互不重复，各有侧重，覆盖不同场景维度
-- **重要**：标题必须有创意和个性，禁止使用"烟火""烟火气""人间烟火"等过于常见的词汇。请从照片场景中提炼独特的意象，如自然景观、味觉记忆、光影变化、旅途心境等"""
+**Notes**:
+- The insights array should contain up to 8 items, each corresponding to a highlight photo (image_index maps to the highlights array index)
+- hero_image_index points to the best hero photo in the highlights array
+- description.image_index also points to the highlights array
+- Title should be concise and evocative — not too long
+- Each insight text must be unique, with different focus areas covering various scene dimensions
+- **Important**: Titles must be creative and distinctive. Avoid overused clichés. Draw unique imagery from the photo scenes — landscapes, culinary memories, light and shadow, travel moods, etc."""
 
 
 def generate_blog_content(
@@ -91,7 +91,7 @@ def generate_blog_content(
     """
     from datetime import date
     if not date_str:
-        date_str = date.today().strftime("%Y年%m月%d日")
+        date_str = date.today().strftime("%Y-%m-%d")
 
     cfg = _load_config()
     client = _get_client(cfg)
@@ -170,17 +170,17 @@ def _fallback_content(highlights: List[dict], date_str: str) -> dict:
     insights = []
     for i, h in enumerate(highlights[:8]):
         insights.append({
-            "text": h.get("narrative_hook", h.get("scene", "精彩瞬间")),
+            "text": h.get("narrative_hook", h.get("scene", "A wonderful moment")),
             "image_index": i,
         })
     return {
-        "title": "今日掠影",
+        "title": "Today's Glimpse",
         "hero_image_index": 0,
         "description": {
-            "text": "记录生活中的美好瞬间，每一帧都值得珍藏。",
+            "text": "Capturing life's beautiful moments — every frame is worth treasuring.",
             "image_index": 0,
         },
         "insights": insights,
-        "tip": "享受当下，记录美好，生活因细节而温暖。",
+        "tip": "Savor the present, capture the beauty — warmth lives in the details.",
         "footer_date": date_str,
     }

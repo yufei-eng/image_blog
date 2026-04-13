@@ -2,7 +2,7 @@
 """Photo Blog Generator — main entry point.
 
 Usage:
-    python3 main.py <image_dir_or_files> [--max-highlights 8] [--output blog.html] [--date 2026年4月13日]
+    python3 main.py <image_dir_or_files> [--max-highlights 8] [--output blog.html] [--date 2026-04-13]
 
 Workflow:
     1. Batch analyze photos via Gemini 3 Pro (understanding)

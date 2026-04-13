@@ -43,7 +43,7 @@ def render_blog_html(
     Returns:
         Absolute path to the generated HTML file
     """
-    title = blog_content.get("title", "今日掠影")
+    title = blog_content.get("title", "Today's Glimpse")
     desc = blog_content.get("description", {})
     desc_text = desc.get("text", "") if isinstance(desc, dict) else str(desc)
     hero_idx = blog_content.get("hero_image_index", 0)
@@ -75,11 +75,11 @@ def render_blog_html(
         </div>"""
 
     html = f"""<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{title} — 片刻感悟</title>
+<title>{title} — Fleeting Thoughts</title>
 <style>
 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
 body {{
@@ -214,16 +214,16 @@ h1 {{
 
     <p class="desc-text">{desc_text}</p>
 
-    <div class="section-title">洞察</div>
+    <div class="section-title">Insights</div>
     {insights_html}
 
     <div class="tip-box">
-        <div class="tip-title">小建议</div>
+        <div class="tip-title">Tips</div>
         <div class="tip-text">{tip}</div>
     </div>
 
     <div class="footer">
-        <span class="footer-label">片刻感悟</span>
+        <span class="footer-label">Fleeting Thoughts</span>
         <span>{footer_date}</span>
     </div>
 </div>

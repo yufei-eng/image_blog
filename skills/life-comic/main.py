@@ -2,7 +2,7 @@
 """Life Comic Generator — main entry point.
 
 Usage:
-    python3 main.py <image_dir_or_files> [--panels 6] [--output comic.html] [--date 2026年4月13日]
+    python3 main.py <image_dir_or_files> [--panels 6] [--output comic.html] [--date 2026-04-13]
 
 Workflow:
     1. Batch analyze photos via Gemini 3 Pro (identify comic-worthy moments)

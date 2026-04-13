@@ -43,7 +43,7 @@ def render_comic_html(
     Returns:
         Absolute path to generated HTML file
     """
-    theme = storyboard.get("theme", "生活漫画")
+    theme = storyboard.get("theme", "Life Comic")
     narrative = storyboard.get("narrative", {})
     title = narrative.get("title", f"《{theme}》")
     body = narrative.get("body", "")
@@ -74,11 +74,11 @@ def render_comic_html(
         comic_section = fallback_gallery
 
     html = f"""<!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>{title} — 生活漫画</title>
+<title>{title} — Life Comic</title>
 <style>
 * {{ margin: 0; padding: 0; box-sizing: border-box; }}
 body {{
@@ -181,7 +181,7 @@ h1 {{
     </div>
 
     <div class="footer">
-        <span class="footer-label">生活漫画</span>
+        <span class="footer-label">Life Comic</span>
         <span>{footer_date}</span>
     </div>
 </div>
