@@ -1,74 +1,76 @@
----
-name: life-comic
-description: >-
-  Generate Looki-style "Life Comics" from user photos. Uses Gemini 3 Pro to identify
-  highlight moments, generates a storyboard script, calls Gemini 3.1 Flash Image
-  to create multi-panel comic-style illustrations, and pairs them with emotional narrative.
-  Triggered when the user asks to generate a comic, life comic, photo-to-comic, or
-  provides photos to create a comic.
-argument-hint: <photo directory or file path>
----
+# Life Comic Generator
 
-# life-comic Usage Guide
+Transform a set of photos into a warm, hand-drawn style comic strip with emotional narrative. Uses Gemini 3 Pro for scene analysis and Gemini 3.1 Flash Image for comic generation.
 
-**Role**: Life Comic Creator — transform everyday photos into warm, heartfelt comic stories.
+## When to Use
 
----
+Trigger this skill when the user:
+- Asks to create a comic, manga, or illustrated story from photos
+- Wants a **life comic**, visual diary, or memory strip
+- Says "turn my photos into a comic", "make a comic strip", "illustrate my day"
+- Requests a comic-style summary of recent events or travel
+- Provides photos and asks for a fun / artistic / illustrated version
+
+## After Generation
+
+After delivering the comic, proactively suggest:
+1. "Would you like a **photo blog version** instead?" (invoke photo-blog skill)
+2. "Want to try a **different theme**?" and list the `suggested_themes` from the output
+3. "Need a different format? I can provide **PNG image / HTML / rich text**."
 
 ## Usage
 
 ```bash
-python3 ~/.claude/skills/life-comic/main.py <photo_dir> [--panels 6] [--output comic.html] [--date "2026-04-13"]
+python3 ~/.claude/skills/life-comic/main.py <image_dir_or_files> \
+    [--panels 6] \
+    [--output comic.html] \
+    [--date 2026-04-13] \
+    [--output-dir ./output] \
+    [--theme "food journey"] \
+    [--style "adventure"] \
+    [--format html|richtext|png|all] \
+    [--save-analysis analysis.json] \
+    [--skip-image-gen]
 ```
 
-### Parameters
+### Arguments
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `input` | Photo directory or single file path | Required |
-| `--panels` | Number of comic panels | 6 |
-| `--output` | Output HTML file path | `comic_output.html` |
-| `--date` | Footer date text (auto-detected from EXIF/filename if omitted) | Auto |
-| `--output-dir` | Directory for generated images | Current dir |
-| `--save-analysis` | Save analysis JSON to file | None |
-| `--skip-image-gen` | Skip comic image generation | No |
+| Arg | Description | Default |
+|-----|-------------|---------|
+| `input` | Image directory or file path | required |
+| `--panels` | Number of comic panels (1-9) | 6 |
+| `--output` | Output file path | `comic_output.html` |
+| `--date` | Date for footer (auto-detected from EXIF if omitted) | auto |
+| `--output-dir` | Directory for generated comic images | `.` |
+| `--theme` | Theme keyword to guide generation | auto |
+| `--style` | Style keyword (alias for --theme) | auto |
+| `--format` | Output format: `html` / `richtext` / `png` / `all` | `all` |
+| `--save-analysis` | Save analysis JSON for debugging | none |
+| `--skip-image-gen` | Skip comic image generation (storyboard only) | false |
 
-### Configuration
+### Output Format Selection
 
-Config file at `~/.claude/skills/life-comic/config.json`:
-```json
-{
-  "compass_api": {
-    "client_token": "your_token",
-    "understanding_model": "gemini-3-pro-preview",
-    "generation_model": "gemini-3.1-flash-image-preview"
-  }
-}
-```
+By default (`--format all`), all three formats are generated every time:
+- **HTML**: self-contained page with comic image + narrative (best for Cursor / Claude Code)
+- **Rich Text**: Markdown for Copilot block (best for chat agents)
+- **PNG**: single composite image (best for sharing / social)
 
-## Workflow
+The agent should pick the most appropriate format to display based on context, and always mention the PNG/comic image path at the end.
 
-```
-1. Collect photos → Batch analyze comic potential (Gemini 3 Pro)
-2. Multi-dimensional scoring (comic appeal / visual distinctness / narrative weight) → Diversity-optimized panel selection
-3. Generate storyboard script → Theme / emotional arc / per-panel scene descriptions
-4. Call Gemini 3.1 Flash Image → Multi-panel comic-style illustration (with reference photos)
-5. Generate emotional narrative → Title + prose body
-6. Render HTML → Comic image + narrative layout
-```
+### Panel Count Support
 
-## Output Format
+Supports **1 to 9** panels. The grid layout adapts automatically:
+- 1 panel: 1x1 | 2: 1x2 | 3: 1x3 | 4: 2x2 | 5-6: 2x3 | 7-8: 2x4 | 9: 3x3
 
-Self-contained HTML file with dark background:
-- **Comic Module**: Multi-panel comic-style illustration (2x3 / 2x2 / 2x4 grid)
-- **Text Module**:
-  - Title: Thematic title
-  - Body: Cohesive prose narrative corresponding to comic panels, with uplifting conclusion
-- **Footer**: "Life Comic" + date
+### Theme / Style Keywords
 
-## Content Principles
+Pass `--theme` to guide comic theme. Falls back to auto-detected themes if photos don't match, with `suggested_themes` providing 3 alternatives.
 
-- Comic scenes strictly adapted from real photos — never fabricate
-- Warm, heartfelt emotional tone
-- Visual style: warm hand-drawn illustration, soft layered colors
-- Narrative has literary quality — avoid list-style writing
+## Capabilities
+
+- Gemini 3 Pro comic-potential analysis (dynamism, visual distinctness, narrative weight)
+- Diversity-optimized panel selection (emotion + scene + time variety)
+- Warm hand-drawn illustration style comic generation via Gemini 3.1 Flash Image
+- EXIF-based date extraction and orientation correction
+- Theme-guided or auto-detected storyboard creation
+- Triple output: HTML, rich text (Markdown), PNG composite

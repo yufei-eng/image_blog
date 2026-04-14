@@ -66,6 +66,7 @@ STORYBOARD_PROMPT = """You are a warm, heartfelt comic scriptwriter. Based on th
 1. All comic scenes must be adapted from real photo content — never fabricate scenes that don't exist
 2. Emotional tone: warm and heartfelt, can be tender or passionate, avoid being overly detached
 3. Comic style: warm hand-drawn illustration, soft but layered colors
+{theme_instruction}
 
 **Theme creativity requirements (extremely important)**:
 - The theme must be creative and distinctive. Avoid generic clichés
@@ -94,17 +95,19 @@ STORYBOARD_PROMPT = """You are a warm, heartfelt comic scriptwriter. Based on th
     "title": "Title (matching the theme)",
     "body": "A 100-200 word emotional narrative. Correspond to each panel, giving each scene emotional value. End with an uplifting reflection that resonates. Write as cohesive prose, not a labeled list."
   }},
-  "footer_date": "YYYY-MM-DD"
+  "footer_date": "YYYY-MM-DD",
+  "suggested_themes": ["theme1", "theme2", "theme3"]
 }}
 ```
 
 **Notes**:
 - panels array source_photo_index corresponds to the input material index
 - scene_description is a detailed instruction for the comic artist — include sufficient visual detail
-- narrative.body should have literary quality — avoid list-style writing"""
+- narrative.body should have literary quality — avoid list-style writing
+- **suggested_themes**: Always provide 3 alternative theme suggestions based on actual photo content"""
 
 
-def generate_storyboard(panel_moments: List[dict], date_str: Optional[str] = None) -> dict:
+def generate_storyboard(panel_moments: List[dict], date_str: Optional[str] = None, user_theme: Optional[str] = None) -> dict:
     """Generate storyboard script and narrative text."""
     from datetime import date
     if not date_str:
@@ -127,8 +130,16 @@ def generate_storyboard(panel_moments: List[dict], date_str: Optional[str] = Non
             "comic_panel_desc": m.get("comic_panel_desc", ""),
         })
 
+    theme_instruction = ""
+    if user_theme:
+        theme_instruction = f"""
+4. **User requested theme**: '{user_theme}'. Use this as the comic's central theme if the photos support it.
+   If fewer than 2 photos match, ignore and use the best theme from actual content.
+   Provide helpful alternative themes in suggested_themes."""
+
     prompt = STORYBOARD_PROMPT.format(
         panels_json=json.dumps(panels_detail, ensure_ascii=False, indent=2),
+        theme_instruction=theme_instruction,
     )
 
     try:
@@ -211,12 +222,8 @@ def generate_comic_image(
     theme = storyboard.get("theme", "Life Comic")
     emotional_arc = storyboard.get("emotional_arc", "")
 
-    if panel_count <= 4:
-        grid_layout = "2x2"
-    elif panel_count <= 6:
-        grid_layout = "2x3"
-    else:
-        grid_layout = "2x4"
+    grid_map = {1: "1x1", 2: "1x2", 3: "1x3", 4: "2x2", 5: "2x3", 6: "2x3", 7: "2x4", 8: "2x4", 9: "3x3"}
+    grid_layout = grid_map.get(panel_count, "2x3")
 
     panel_descs = ""
     for i, p in enumerate(panels):
@@ -235,7 +242,7 @@ def generate_comic_image(
 
     parts: list[types.Part] = []
 
-    ref_count = min(len(reference_photos), 6)
+    ref_count = min(len(reference_photos), 9)
     for rp in reference_photos[:ref_count]:
         try:
             img_data, mime = _load_image_bytes(rp)
@@ -281,7 +288,7 @@ def generate_comic_image(
 def _fallback_storyboard(panels: List[dict], date_str: str) -> dict:
     """Minimal fallback storyboard."""
     panel_list = []
-    for i, p in enumerate(panels[:6]):
+    for i, p in enumerate(panels[:9]):
         panel_list.append({
             "panel_index": i,
             "source_photo_index": i,

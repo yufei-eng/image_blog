@@ -1,69 +1,71 @@
----
-name: photo-blog
-description: >-
-  Generate Looki-style "Photo Blog" posts from user photos. Uses Gemini 3 Pro to understand
-  photo content, intelligently selects highlight images, and generates a visual blog with
-  title, description, insights (photo+text pairs), and tips.
-  Triggered when the user asks to generate a photo blog, photo diary, visual recap,
-  or provides a photo directory to create a blog.
-argument-hint: <photo directory or file path>
----
+# Photo Blog Generator
 
-# photo-blog Usage Guide
+Generate a beautiful, narrative-driven photo blog from a set of images. Analyzes photos using Gemini 3 Pro for scene understanding, selects highlights with diversity optimization, and produces a styled blog with title, narrative, insights, and practical tips.
 
-**Role**: Photo Blog Creator — turn photos into evocative visual stories.
+## When to Use
 
----
+Trigger this skill when the user:
+- Asks to create a photo blog, photo story, or image-based article
+- Wants a **life summary**, daily recap, travel log, or memory collage from photos
+- Says "summarize my recent photos", "make a photo diary", "create a visual story"
+- Provides photos and asks for a narrative / writeup / summary / review
+- Requests a styled blog post from a collection of images
+
+## After Generation
+
+After delivering the blog, proactively suggest:
+1. "Would you like a **comic version** of this?" (invoke life-comic skill)
+2. "Want to try a **different theme**?" and list the `suggested_themes` from the output
+3. "Need a different format? I can provide **PNG image / HTML / rich text**."
 
 ## Usage
 
 ```bash
-python3 ~/.claude/skills/photo-blog/main.py <photo_dir> [--max-highlights 8] [--output blog.html] [--date "2026-04-13"]
+python3 ~/.claude/skills/photo-blog/main.py <image_dir_or_files> \
+    [--max-highlights 9] \
+    [--output blog.html] \
+    [--date 2026-04-13] \
+    [--theme "food journey"] \
+    [--style "minimalist"] \
+    [--format html|richtext|png|all] \
+    [--save-analysis analysis.json]
 ```
 
-### Parameters
+### Arguments
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `input` | Photo directory or single file path | Required |
-| `--max-highlights` | Max number of highlight photos to select | 8 |
-| `--output` | Output HTML file path | `blog_output.html` |
-| `--date` | Footer date text (auto-detected from EXIF/filename if omitted) | Auto |
-| `--save-analysis` | Save analysis JSON to file | None |
+| Arg | Description | Default |
+|-----|-------------|---------|
+| `input` | Image directory or file path | required |
+| `--max-highlights` | Number of highlight photos (1-9) | 9 |
+| `--output` | Output file path | `blog_output.html` |
+| `--date` | Date for footer (auto-detected from EXIF if omitted) | auto |
+| `--theme` | Theme keyword to guide generation (e.g., "food", "nightlife") | auto |
+| `--style` | Style keyword (alias for --theme) | auto |
+| `--format` | Output format: `html` / `richtext` / `png` / `all` | `all` |
+| `--save-analysis` | Save analysis JSON for debugging | none |
 
-### Configuration
+### Output Format Selection
 
-Uses Compass API. Config file at `~/.claude/skills/photo-blog/config.json`:
-```json
-{
-  "compass_api": {
-    "client_token": "your_token",
-    "understanding_model": "gemini-3-pro-preview",
-    "generation_model": "gemini-3.1-flash-image-preview"
-  }
-}
-```
+By default (`--format all`), all three formats are generated every time:
+- **HTML**: self-contained page with embedded images (best for Cursor / Claude Code)
+- **Rich Text**: Markdown compatible with Copilot block (`format: "markdown"`) (best for chat agents)
+- **PNG**: single composite image (best for sharing / social)
 
-## Workflow
+The agent should pick the most appropriate format to display based on context, and always mention the PNG image path at the end.
 
-```
-1. Collect photos → Batch analyze (Gemini 3 Pro, 5 per batch)
-2. Multi-dimensional scoring (visual/story/emotion/uniqueness/technical) → Diversity-optimized highlight selection
-3. Generate narrative (title / description / insights / tips) → Warm, evocative style
-4. Render HTML → Dark-themed card layout with embedded base64 images
-```
+### Image Count Support
 
-## Output Format
+Supports **1 to 9** input images. Works with a single photo up to large albums (auto-selects top 9 highlights from any number of inputs).
 
-Self-contained HTML file with dark background card layout:
-- **Title**: Poetic and concise (e.g., "Afternoon Among the Peaks")
-- **Description**: Hero image + 2-4 sentence coherent narrative
-- **Insights**: Up to 8 photo+text pairs, alternating layout
-- **Tips**: Personalized practical advice based on scene context
-- **Footer**: "Fleeting Thoughts" + date
+### Theme / Style Keywords
 
-## Content Principles
+Pass `--theme` to guide generation toward a specific angle. If the photos don't match the theme (fewer than 2 relevant photos), the skill falls back to auto-detected themes and returns `suggested_themes` with 3 alternatives.
 
-- Strictly based on real photo content — never fabricate scenes or events
-- Warm, evocative writing style that emphasizes emotional resonance
-- Each insight has a different focus — no repetitive descriptions
+## Capabilities
+
+- Gemini 3 Pro multi-modal photo understanding (scene, mood, objects, narrative hooks)
+- Multi-dimensional scoring (visual appeal, story value, emotion, uniqueness, technical quality)
+- Diversity-optimized highlight selection (mood + location + scene variety)
+- EXIF-based date extraction and orientation correction
+- Theme-guided or auto-detected narrative generation
+- Triple output: HTML, rich text (Markdown), PNG composite

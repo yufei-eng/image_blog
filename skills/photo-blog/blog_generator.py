@@ -37,6 +37,7 @@ BLOG_GENERATION_PROMPT = """You are a content creator with both artistic sensibi
 1. All content must be strictly based on real scenes described in the photo analysis — never fabricate
 2. Writing style: warm, evocative, with literary flair — avoid dry, chronological recounting
 3. Emphasize emotional resonance — let readers feel the warmth and atmosphere of the scenes
+{theme_instruction}
 
 **Photo analysis data**:
 {analysis_json}
@@ -61,23 +62,26 @@ BLOG_GENERATION_PROMPT = """You are a content creator with both artistic sensibi
     }}
   ],
   "tip": "A 1-2 sentence personalized practical tip based on the scene (outdoor/indoor/food/travel etc.)",
-  "footer_date": "YYYY-MM-DD"
+  "footer_date": "YYYY-MM-DD",
+  "suggested_themes": ["theme1", "theme2", "theme3"]
 }}
 ```
 
 **Notes**:
-- The insights array should contain up to 8 items, each corresponding to a highlight photo (image_index maps to the highlights array index)
+- The insights array should contain one item per highlight photo (up to 9), each mapped by image_index
 - hero_image_index points to the best hero photo in the highlights array
 - description.image_index also points to the highlights array
 - Title should be concise and evocative — not too long
 - Each insight text must be unique, with different focus areas covering various scene dimensions
-- **Important**: Titles must be creative and distinctive. Avoid overused clichés. Draw unique imagery from the photo scenes — landscapes, culinary memories, light and shadow, travel moods, etc."""
+- **Important**: Titles must be creative and distinctive. Avoid overused clichés. Draw unique imagery from the photo scenes — landscapes, culinary memories, light and shadow, travel moods, etc.
+- **suggested_themes**: Always provide 3 alternative theme suggestions based on actual photo content (short phrases). These help the user explore different angles."""
 
 
 def generate_blog_content(
     all_analyses: List[dict],
     highlights: List[dict],
     date_str: Optional[str] = None,
+    user_theme: Optional[str] = None,
 ) -> dict:
     """Generate blog content from photo analyses and selected highlights.
 
@@ -85,6 +89,7 @@ def generate_blog_content(
         all_analyses: Full analysis list (for context)
         highlights: Selected highlight photos with analysis
         date_str: Date string for footer (defaults to today)
+        user_theme: Optional user-specified theme/style keyword
 
     Returns:
         Blog content dict with title, description, insights, tip, footer
@@ -120,9 +125,17 @@ def generate_blog_content(
             "score": h.get("score", 0),
         })
 
+    theme_instruction = ""
+    if user_theme:
+        theme_instruction = f"""
+4. **User requested theme**: '{user_theme}'. Prioritize this theme in the title and narrative.
+   If fewer than 2 photos match this theme, ignore it and use the best theme from the actual content.
+   In that case, the suggested_themes field becomes especially important — offer 3 themes that DO match the photos."""
+
     prompt = BLOG_GENERATION_PROMPT.format(
         analysis_json=json.dumps(analysis_summary, ensure_ascii=False, indent=2),
         highlights_json=json.dumps(highlights_detail, ensure_ascii=False, indent=2),
+        theme_instruction=theme_instruction,
     )
 
     try:
@@ -168,7 +181,7 @@ def generate_blog_content(
 def _fallback_content(highlights: List[dict], date_str: str) -> dict:
     """Minimal fallback when LLM generation fails."""
     insights = []
-    for i, h in enumerate(highlights[:8]):
+    for i, h in enumerate(highlights[:9]):
         insights.append({
             "text": h.get("narrative_hook", h.get("scene", "A wonderful moment")),
             "image_index": i,

@@ -3,13 +3,14 @@
 
 Usage:
     python3 main.py <image_dir_or_files> [--panels 6] [--output comic.html] [--date 2026-04-13]
+        [--theme "food journey"] [--format html]
 
 Workflow:
     1. Batch analyze photos via Gemini 3 Pro (identify comic-worthy moments)
     2. Select top moments with narrative diversity
     3. Generate storyboard script and emotional narrative
     4. Generate multi-panel comic image via Gemini 3.1 Flash Image
-    5. Render to self-contained HTML
+    5. Render to selected format (HTML / rich text / PNG / all)
 """
 
 import argparse
@@ -58,33 +59,38 @@ def moment_to_dict(m: ComicMoment) -> dict:
 def main():
     parser = argparse.ArgumentParser(description="Life Comic Generator")
     parser.add_argument("input", help="Image directory or file path")
-    parser.add_argument("--panels", type=int, default=6, help="Number of comic panels")
+    parser.add_argument("--panels", type=int, default=6, help="Number of comic panels (1-9)")
     parser.add_argument("--output", default="comic_output.html", help="Output HTML path")
     parser.add_argument("--date", default=None, help="Date string for footer")
     parser.add_argument("--output-dir", default=".", help="Directory for generated images")
     parser.add_argument("--save-analysis", default=None, help="Save analysis JSON")
     parser.add_argument("--skip-image-gen", action="store_true", help="Skip comic image generation")
+    parser.add_argument("--theme", default=None, help="Theme/style keyword to guide generation")
+    parser.add_argument("--style", default=None, help="Style keyword (alias for --theme)")
+    parser.add_argument("--format", default="all", choices=["html", "richtext", "png", "all"],
+                        help="Output format: html, richtext (markdown for chat), png, all (default)")
     args = parser.parse_args()
 
+    user_theme = args.theme or args.style
+    panel_count = min(max(args.panels, 1), 9)
+
     print("=" * 60)
-    print("  LIFE COMIC GENERATOR")
+    print("  LIFE COMIC GENERATOR v0.2")
     print("=" * 60)
 
-    # Step 1: Collect images
     image_paths = collect_images(args.input)
     if not image_paths:
         print("No images found.")
         sys.exit(1)
     print(f"\n[1/5] Found {len(image_paths)} images")
 
-    # Step 2: Analyze
     print(f"\n[2/5] Analyzing photos for comic moments (Gemini 3 Pro)...")
     moments = analyze_photos(image_paths)
     print(f"  Analyzed {len(moments)} photos")
 
-    # Step 3: Select panels
-    print(f"\n[3/5] Selecting top {args.panels} comic panels...")
-    selected = select_comic_panels(moments, args.panels)
+    effective_panels = min(panel_count, len(moments))
+    print(f"\n[3/5] Selecting top {effective_panels} comic panels...")
+    selected = select_comic_panels(moments, effective_panels)
     print(f"  Selected {len(selected)} panels:")
     for i, m in enumerate(selected):
         print(f"    #{i+1} [{m.tier}] {m.composite_score:.1f} — {m.scene_summary}")
@@ -97,7 +103,6 @@ def main():
             json.dump({"all": all_dicts, "selected": selected_dicts}, f, ensure_ascii=False, indent=2)
         print(f"  Analysis saved to {args.save_analysis}")
 
-    # Auto-detect date from photos if not provided
     date_str = args.date
     if not date_str:
         for p in image_paths:
@@ -105,14 +110,19 @@ def main():
             if date_str:
                 break
 
-    # Step 4: Generate storyboard
+    if user_theme:
+        print(f"\n  Theme: '{user_theme}'")
+
     print(f"\n[4/5] Generating storyboard and narrative...")
-    storyboard = generate_storyboard(selected_dicts, date_str=date_str)
+    storyboard = generate_storyboard(selected_dicts, date_str=date_str, user_theme=user_theme)
     print(f"  Theme: {storyboard.get('theme', '?')}")
     print(f"  Title: {storyboard.get('narrative', {}).get('title', '?')}")
     print(f"  Panels: {len(storyboard.get('panels', []))}")
 
-    # Step 5: Generate comic image
+    suggested = storyboard.get("suggested_themes", [])
+    if suggested:
+        print(f"  Suggested themes: {', '.join(suggested)}")
+
     comic_image_path = None
     if not args.skip_image_gen:
         print(f"\n[5/5] Generating comic image (Gemini 3.1 Flash Image)...")
@@ -126,11 +136,40 @@ def main():
     else:
         print(f"\n[5/5] Skipping comic image generation (--skip-image-gen)")
 
-    # Step 6: Render HTML
     ref_paths = [m.file_path for m in selected]
-    output_path = render_comic_html(storyboard, comic_image_path, ref_paths, args.output)
+    output_base = os.path.splitext(args.output)[0]
+
+    generated_files = {}
+
+    if args.format in ("html", "all"):
+        html_path = render_comic_html(storyboard, comic_image_path, ref_paths, args.output)
+        generated_files["html"] = html_path
+        print(f"\n  [HTML] {html_path}")
+
+    if args.format in ("richtext", "all"):
+        from richtext_renderer import render_comic_richtext
+        rt_path = output_base + "_richtext.md"
+        render_comic_richtext(storyboard, comic_image_path, ref_paths, rt_path)
+        generated_files["richtext"] = rt_path
+        print(f"  [Rich Text] {rt_path}")
+
+    if args.format in ("png", "all"):
+        from png_renderer import render_comic_png
+        png_path = output_base + ".png"
+        render_comic_png(storyboard, comic_image_path, ref_paths, png_path)
+        generated_files["png"] = png_path
+        print(f"  [PNG] {png_path}")
+
     print(f"\n{'=' * 60}")
-    print(f"  Comic generated: {output_path}")
+    print(f"  Comic generated (v0.2)")
+    for fmt, path in generated_files.items():
+        print(f"  [{fmt.upper()}] {path}")
+    if comic_image_path:
+        print(f"\n  >>> COMIC IMAGE: {comic_image_path}")
+    if "png" in generated_files:
+        print(f"  >>> COMPOSITE IMAGE (shareable): {generated_files['png']}")
+    if "richtext" in generated_files:
+        print(f"  >>> RICH TEXT (for chat): {generated_files['richtext']}")
     print(f"{'=' * 60}")
 
 
