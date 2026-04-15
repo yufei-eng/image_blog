@@ -40,6 +40,9 @@ def _get_client(cfg: dict):
     base_url = api_cfg.get("base_url", "http://beeai.test.shopee.io/inbeeai/compass-api/v1")
     if not token:
         print("ERROR: Compass API client_token not found.")
+        print("FIX: Either set COMPASS_CLIENT_TOKEN env var, or create config.json from config.json.example:")
+        print(f"  cp {os.path.join(SCRIPT_DIR, 'config.json.example')} {os.path.join(SCRIPT_DIR, 'config.json')}")
+        print("  Then edit config.json and fill in client_token.")
         sys.exit(1)
     return genai.Client(api_key=token, http_options=types.HttpOptions(base_url=base_url))
 
