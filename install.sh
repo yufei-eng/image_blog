@@ -36,9 +36,15 @@ fi
 
 # --- 2. Install Python dependencies ---
 info "Installing Python dependencies..."
-pip3 install --quiet --upgrade google-genai Pillow 2>/dev/null || \
-pip install --quiet --upgrade google-genai Pillow 2>/dev/null || \
-warn "Could not auto-install deps. Run manually: pip install google-genai Pillow"
+pip3 install --quiet --upgrade google-genai Pillow playwright 2>/dev/null || \
+pip install --quiet --upgrade google-genai Pillow playwright 2>/dev/null || \
+warn "Could not auto-install deps. Run manually: pip install google-genai Pillow playwright"
+
+# --- 2b. Install Playwright Chromium browser ---
+info "Installing Playwright Chromium browser (for PNG screenshots)..."
+python3 -m playwright install chromium 2>/dev/null || \
+python -m playwright install chromium 2>/dev/null || \
+warn "Could not install Chromium. PNG output will use Pillow fallback."
 
 # --- 3. Create symlinks for Claude Code ---
 CLAUDE_SKILLS="$HOME/.claude/skills"
