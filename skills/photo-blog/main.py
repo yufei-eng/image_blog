@@ -24,7 +24,11 @@ sys.path.insert(0, SCRIPT_DIR)
 from image_analyzer import analyze_photos, select_highlights, PhotoAnalysis, extract_photo_date
 from blog_generator import generate_blog_content
 from html_renderer import render_blog_html
-from cover_generator import generate_cover_image
+
+try:
+    from cover_generator import generate_cover_image
+except ImportError:
+    generate_cover_image = None
 
 IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".webp", ".heic"}
 
@@ -86,7 +90,8 @@ def main():
     if not image_paths:
         print("No images found.")
         sys.exit(1)
-    total_steps = 4 if args.skip_cover else 5
+    skip_cover = args.skip_cover or generate_cover_image is None
+    total_steps = 4 if skip_cover else 5
     print(f"\n[1/{total_steps}] Found {len(image_paths)} images")
 
     print(f"\n[2/{total_steps}] Analyzing photos with Gemini 3 Pro...")
@@ -132,26 +137,28 @@ def main():
     output_dir = os.path.dirname(os.path.abspath(args.output)) or "."
 
     cover_path = None
-    if not args.skip_cover:
+    if not skip_cover:
         print(f"\n[5/{total_steps}] Generating AI cover image...")
         cover_path = generate_cover_image(blog_content, highlight_paths, output_dir=output_dir)
         if cover_path:
             print(f"  Cover generated: {cover_path}")
         else:
             print(f"  Cover generation failed, falling back to original photo")
+    elif not args.skip_cover:
+        print(f"\n  [SKIP] cover_generator not available, using original photo as hero")
 
     generated_files = {}
     html_output = None
 
     if args.format in ("html", "all"):
-        html_output = render_blog_html(blog_content, highlight_paths, args.output, cover_path=cover_path)
+        html_output = render_blog_html(blog_content, highlight_paths, args.output)
         generated_files["html"] = html_output
         print(f"\n  [HTML] {html_output}")
 
     if args.format in ("richtext", "all"):
         from richtext_renderer import render_blog_richtext
         rt_path = output_base + "_richtext.md"
-        render_blog_richtext(blog_content, highlight_paths, rt_path, cover_path=cover_path)
+        render_blog_richtext(blog_content, highlight_paths, rt_path)
         generated_files["richtext"] = rt_path
         print(f"  [Rich Text] {rt_path}")
 
@@ -159,7 +166,7 @@ def main():
         from png_renderer import render_blog_png
         png_path = output_base + ".png"
         if not html_output:
-            html_output = render_blog_html(blog_content, highlight_paths, output_base + "_tmp.html", cover_path=cover_path)
+            html_output = render_blog_html(blog_content, highlight_paths, output_base + "_tmp.html")
         result = render_blog_png(blog_content, highlight_paths, png_path, html_path=html_output)
         if result:
             generated_files["png"] = png_path
