@@ -14,9 +14,9 @@ import sys
 
 
 def _ensure_playwright() -> bool:
-    """Try to make Playwright usable: install the package + Chromium if missing."""
+    """Ensure the Playwright Python package is importable."""
     try:
-        from playwright.sync_api import sync_playwright
+        from playwright.sync_api import sync_playwright  # noqa: F401
         return True
     except ImportError:
         pass
@@ -41,9 +41,23 @@ def _ensure_playwright() -> bool:
         return False
 
     try:
-        from playwright.sync_api import sync_playwright  # noqa: F811
+        from playwright.sync_api import sync_playwright  # noqa: F811, F401
         return True
     except ImportError:
+        return False
+
+
+def _install_chromium() -> bool:
+    """Install Chromium browser binary for Playwright."""
+    print("  [INFO] Chromium browser not found, installing...")
+    try:
+        subprocess.check_call(
+            [sys.executable, "-m", "playwright", "install", "chromium"],
+            timeout=300,
+        )
+        return True
+    except Exception as e:
+        print(f"  [WARN] playwright install chromium failed: {e}")
         return False
 
 
@@ -54,21 +68,26 @@ def _screenshot_html(html_path: str, png_path: str, width: int = 1080, scale: in
 
     from playwright.sync_api import sync_playwright
 
-    try:
-        with sync_playwright() as p:
-            browser = p.chromium.launch()
-            page = browser.new_page(
-                viewport={"width": width, "height": 800},
-                device_scale_factor=scale,
-            )
-            page.goto(f"file://{os.path.abspath(html_path)}")
-            page.wait_for_timeout(1200)
-            page.screenshot(path=png_path, full_page=True)
-            browser.close()
-        return os.path.exists(png_path)
-    except Exception as e:
-        print(f"  [WARN] Playwright screenshot failed: {e}")
-        return False
+    for attempt in range(2):
+        try:
+            with sync_playwright() as p:
+                browser = p.chromium.launch()
+                page = browser.new_page(
+                    viewport={"width": width, "height": 800},
+                    device_scale_factor=scale,
+                )
+                page.goto(f"file://{os.path.abspath(html_path)}")
+                page.wait_for_timeout(1200)
+                page.screenshot(path=png_path, full_page=True)
+                browser.close()
+            return os.path.exists(png_path)
+        except Exception as e:
+            if attempt == 0 and "Executable doesn't exist" in str(e):
+                if _install_chromium():
+                    continue
+            print(f"  [WARN] Playwright screenshot failed: {e}")
+            return False
+    return False
 
 
 def render_blog_png(blog_content: dict, highlight_paths: list, output_path: str, html_path: str = None) -> str | None:
