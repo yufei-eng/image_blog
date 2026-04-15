@@ -62,7 +62,7 @@ def _install_chromium() -> bool:
         return False
 
 
-def _screenshot_html(html_path: str, png_path: str, width: int = 1080, scale: int = 2) -> bool:
+def _screenshot_html(html_path: str, png_path: str, width: int = 480, scale: int = 2) -> bool:
     """Take a full-page screenshot of an HTML file via Playwright. Returns True on success."""
     if not _ensure_playwright():
         return False

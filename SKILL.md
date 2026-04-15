@@ -115,9 +115,11 @@ Both skills generate 3 output formats by default (`--format all`):
 | **PNG** | `*.png` | Sharing — pixel-perfect screenshot of the HTML, 2x HiDPI |
 
 **Display rules**:
-1. In **chat agent** context → show the Rich Text (Markdown) content inline, then mention the PNG path
-2. In **Cursor / Claude Code** → mention the HTML path to open in browser, then mention the PNG path
-3. **Always** provide the PNG image path at the end as a shareable image result
+1. In **chat agent** context → show the Rich Text (Markdown) content inline in the conversation
+2. **Always** provide **both** download links at the end:
+   - PNG download link (shareable image)
+   - HTML download link — append a localized label: use "(for internal testing)" in English conversations, and the equivalent localized phrase in the user's language (e.g. for Chinese users, translate "for internal testing" naturally)
+3. **Do NOT** embed PNG as an inline image preview. Only provide download links for PNG and HTML.
 
 ## Post-Generation Interaction
 
@@ -125,7 +127,8 @@ After delivering results, proactively suggest:
 1. If photo-blog was used → "Would you like a **comic version**?"
 2. If life-comic was used → "Would you like a **photo blog version**?"
 3. Show `suggested_themes` from output → "Want to try a different theme? Options: {themes}"
-4. "Need a different format? I can provide PNG / HTML / rich text."
+
+**Do NOT** ask format-related questions (e.g. "Need a different format?"). All formats are generated and delivered automatically.
 
 ## Theme / Style Keywords
 

@@ -31,7 +31,8 @@ Trigger this skill when the user:
 After delivering the blog, proactively suggest:
 1. "Would you like a **comic version** of this?" (invoke life-comic skill)
 2. "Want to try a **different theme**?" and list the `suggested_themes` from the output
-3. "Need a different format? I can provide **PNG image / HTML / rich text**."
+
+**Do NOT** ask format-related questions. All formats are generated and delivered automatically.
 
 ## Usage
 
@@ -75,11 +76,13 @@ By default (`--format all`), all three formats are generated every time:
 
 ### Delivering Results to User
 
-**IMPORTANT**: After generation, upload and present ALL output files to the user:
+**IMPORTANT**: After generation, upload ALL output files and provide **download links only** (no inline image preview):
 
-1. **PNG** — upload via `mcp__proxy__upload_file` and embed as `![...](<url>)` in the response
-2. **HTML** — upload via `mcp__proxy__upload_file` and provide the download link (label it clearly, e.g. "📄 [HTML version (richer experience)](<url>)")
-3. Always show both PNG inline and HTML link so the user can choose
+1. **PNG** — upload via `mcp__proxy__upload_file` and provide a download link (e.g. "📷 [PNG download](<url>)")
+2. **HTML** — upload via `mcp__proxy__upload_file` and provide a download link with i18n label:
+   - English: `📄 [HTML version (for internal testing)](<url>)`
+   - Other languages: translate "for internal testing" naturally into the user's language
+3. **Do NOT** embed PNG as an inline image (`![...](<url>)`). Provide download links only.
 
 ### Image Count Support
 
