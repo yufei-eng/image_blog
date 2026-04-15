@@ -159,9 +159,10 @@ def main():
         png_path = output_base + ".png"
         if not html_output:
             html_output = render_comic_html(storyboard, comic_image_path, ref_paths, output_base + "_tmp.html")
-        render_comic_png(storyboard, comic_image_path, ref_paths, png_path, html_path=html_output)
-        generated_files["png"] = png_path
-        print(f"  [PNG] {png_path}")
+        result = render_comic_png(storyboard, comic_image_path, ref_paths, png_path, html_path=html_output)
+        if result:
+            generated_files["png"] = png_path
+            print(f"  [PNG] {png_path}")
 
     print(f"\n{'=' * 60}")
     print(f"  Comic generated (v0.2)")
