@@ -32,7 +32,7 @@ _LABELS = {
 }
 
 
-def render_blog_richtext(blog_content: dict, highlight_paths: list[str], output_path: str) -> str:
+def render_blog_richtext(blog_content: dict, highlight_paths: list[str], output_path: str, cover_path: str = None) -> str:
     """Render blog content as Markdown suitable for chat agents.
 
     Returns the output file path.
@@ -51,7 +51,10 @@ def render_blog_richtext(blog_content: dict, highlight_paths: list[str], output_
     lines.append("")
 
     hero_idx = blog_content.get("hero_image_index", 0)
-    if hero_idx < len(highlight_paths):
+    if cover_path and os.path.exists(cover_path):
+        lines.append(f"![cover]({cover_path})")
+        lines.append("")
+    elif hero_idx < len(highlight_paths):
         lines.append(f"![hero]({highlight_paths[hero_idx]})")
         lines.append("")
 

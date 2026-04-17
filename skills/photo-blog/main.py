@@ -149,7 +149,7 @@ def main():
     cover_path = None
     if not skip_cover:
         print(f"\n[5/{total_steps}] Generating AI cover image...")
-        cover_path = generate_cover_image(blog_content, highlight_paths, output_dir=output_dir)
+        cover_path = generate_cover_image(blog_content, highlight_paths, output_dir=output_dir, lang=lang)
         if cover_path:
             print(f"  Cover generated: {cover_path}")
         else:
@@ -161,14 +161,14 @@ def main():
     html_output = None
 
     if args.format in ("html", "all"):
-        html_output = render_blog_html(blog_content, highlight_paths, args.output)
+        html_output = render_blog_html(blog_content, highlight_paths, args.output, cover_path=cover_path)
         generated_files["html"] = html_output
         print(f"\n  [HTML] {html_output}")
 
     if args.format in ("richtext", "all"):
         from richtext_renderer import render_blog_richtext
         rt_path = output_base + "_richtext.md"
-        render_blog_richtext(blog_content, highlight_paths, rt_path)
+        render_blog_richtext(blog_content, highlight_paths, rt_path, cover_path=cover_path)
         generated_files["richtext"] = rt_path
         print(f"  [Rich Text] {rt_path}")
 
@@ -176,7 +176,7 @@ def main():
         from png_renderer import render_blog_png
         png_path = output_base + ".png"
         if not html_output:
-            html_output = render_blog_html(blog_content, highlight_paths, output_base + "_tmp.html")
+            html_output = render_blog_html(blog_content, highlight_paths, output_base + "_tmp.html", cover_path=cover_path)
         result = render_blog_png(blog_content, highlight_paths, png_path, html_path=html_output)
         if result:
             generated_files["png"] = png_path

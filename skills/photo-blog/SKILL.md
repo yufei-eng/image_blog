@@ -1,11 +1,13 @@
 ---
 name: photo-blog
 description: >-
-  Photo blog generator. Analyze photos with Gemini 3 Pro, score and select highlights
-  with diversity optimization, generate narrative-driven blog with poetic title, scene
-  insights, and tips. Supports 1-9 images, theme/style keywords, and triple output
-  (HTML, rich text, PNG). Triggers when users request photo blog, life summary, travel
-  log, photo diary, or visual story from images.
+  Photo blog generator with AI cover image. Analyze photos with Gemini 3 Pro, score
+  and select highlights with diversity optimization, generate narrative-driven blog with
+  poetic title, scene insights, and tips. Generates diverse AI cover images using a
+  89-template style library matched to blog content (mood, theme, photo count).
+  Supports 1-9 images, theme/style keywords, and triple output (HTML, rich text, PNG).
+  Triggers when users request photo blog, life summary, travel log, photo diary, or
+  visual story from images.
 argument-hint: <image_directory_or_file>
 metadata:
   execution_mode: sandbox
@@ -13,9 +15,9 @@ metadata:
     - imagen_generate
 ---
 
-# Photo Blog Generator
+# Photo Blog Generator (with AI Cover)
 
-Generate a beautiful, narrative-driven photo blog from a set of images. Analyzes photos using Gemini 3 Pro for scene understanding, selects highlights with diversity optimization, and produces a styled blog with title, narrative, insights, and practical tips.
+Generate a beautiful, narrative-driven photo blog with an AI-generated cover image. Analyzes photos using Gemini 3 Pro for scene understanding, selects highlights with diversity optimization, generates a diverse cover via template-matched Gemini 3.1 Flash Image, and produces a styled blog with title, narrative, insights, and practical tips.
 
 ## When to Use
 
@@ -51,6 +53,7 @@ python3 <SKILL_DIR>/main.py <image_dir_or_files> \
     [--theme "food journey"] \
     [--style "minimalist"] \
     [--format html|richtext|png|all] \
+    [--skip-cover] \
     [--save-analysis analysis.json]
 ```
 
@@ -65,6 +68,7 @@ python3 <SKILL_DIR>/main.py <image_dir_or_files> \
 | `--theme` | Theme keyword to guide generation (e.g., "food", "nightlife") | auto |
 | `--style` | Style keyword (alias for --theme) | auto |
 | `--format` | Output format: `html` / `richtext` / `png` / `all` | `all` |
+| `--skip-cover` | Skip AI cover generation, use original photo as hero | false |
 | `--save-analysis` | Save analysis JSON for debugging | none |
 
 ### Output Format Selection
@@ -112,6 +116,17 @@ Alternatively, set the `COMPASS_CLIENT_TOKEN` environment variable (takes preced
 
 If `config.json` is missing and the env var is not set, the script exits with `ERROR: Compass API client_token not found.` — create the config file before running.
 
+## AI Cover Image
+
+By default, an AI-generated cover image replaces the hero photo at the top of the blog. The cover is:
+
+- **Template-driven**: Matched from a library of 89 analyzed reference styles
+- **Content-aware**: Scoring considers photo count, mood, theme, and visual diversity
+- **Style-diverse**: Diversity penalty ensures consecutive runs produce different aesthetics (kawaii, grunge, minimalist, magazine, retro, etc.)
+- **Language-aware**: Text on the cover follows the blog language (English by default)
+
+Use `--skip-cover` to fall back to the original highlight photo as hero.
+
 ## Capabilities
 
 - Gemini 3 Pro multi-modal photo understanding (scene, mood, objects, narrative hooks)
@@ -119,4 +134,5 @@ If `config.json` is missing and the env var is not set, the script exits with `E
 - Diversity-optimized highlight selection (mood + location + scene variety)
 - EXIF-based date extraction and orientation correction
 - Theme-guided or auto-detected narrative generation
+- AI cover image with 89-template style library and content-aware matching
 - Triple output: HTML, rich text (Markdown), PNG composite

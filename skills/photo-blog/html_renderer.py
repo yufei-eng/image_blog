@@ -38,6 +38,7 @@ def render_blog_html(
     blog_content: dict,
     highlight_paths: List[str],
     output_path: str = "blog_output.html",
+    cover_path: Optional[str] = None,
 ) -> str:
     """Render blog content to a self-contained HTML file.
 
@@ -45,6 +46,7 @@ def render_blog_html(
         blog_content: Generated blog dict (title, description, insights, tip, etc.)
         highlight_paths: File paths of highlight images (ordered by selection)
         output_path: Where to save the HTML file
+        cover_path: Optional path to AI-generated cover image (replaces hero photo)
 
     Returns:
         Absolute path to the generated HTML file
@@ -60,7 +62,9 @@ def render_blog_html(
     footer_date = blog_content.get("footer_date", "")
 
     hero_b64 = ""
-    if highlight_paths and hero_idx < len(highlight_paths):
+    if cover_path and os.path.exists(cover_path):
+        hero_b64 = _img_to_base64(cover_path, max_width=1200)
+    elif highlight_paths and hero_idx < len(highlight_paths):
         hero_b64 = _img_to_base64(highlight_paths[hero_idx], max_width=1000)
 
     insight_blocks = []
