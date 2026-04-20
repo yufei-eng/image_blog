@@ -252,7 +252,7 @@ def analyze_photos(image_paths: List[str], batch_size: int = BATCH_SIZE) -> List
     return all_moments
 
 
-def select_comic_panels(moments: List[ComicMoment], panel_count: int = 6) -> List[ComicMoment]:
+def select_comic_panels(moments: List[ComicMoment], panel_count: int = 8) -> List[ComicMoment]:
     """Select the best moments for comic panels with narrative flow and diversity."""
     sorted_moments = sorted(moments, key=lambda m: m.composite_score, reverse=True)
 
@@ -289,7 +289,7 @@ if __name__ == "__main__":
         sys.exit(1)
 
     target = sys.argv[1]
-    panels = int(sys.argv[2]) if len(sys.argv) > 2 else 6
+    panels = int(sys.argv[2]) if len(sys.argv) > 2 else 8
 
     exts = {".jpg", ".jpeg", ".png", ".webp", ".heic"}
     if os.path.isdir(target):
