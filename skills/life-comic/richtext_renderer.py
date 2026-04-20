@@ -37,19 +37,6 @@ def render_comic_richtext(
         lines.append(f"> {emotional_arc}")
         lines.append("")
 
-    lines.append("---")
-    lines.append("")
-
-    for i, panel in enumerate(panels):
-        tag = panel.get("emotion_tag", "")
-        desc = panel.get("scene_description", "")
-        panel_label = f"\u7b2c{i+1}\u683c" if lang == "zh" else f"Panel {i+1}"
-        lines.append(f"**{panel_label}** — _{tag}_")
-        lines.append(f"{desc[:200]}")
-        if i < len(reference_paths):
-            lines.append(f"![ref {i+1}]({reference_paths[i]})")
-        lines.append("")
-
     if body:
         lines.append("---")
         lines.append("")

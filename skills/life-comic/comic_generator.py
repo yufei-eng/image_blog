@@ -94,16 +94,20 @@ STORYBOARD_PROMPT = """You are a warm, heartfelt comic scriptwriter. Based on th
   ],
   "narrative": {{
     "title": "Title (matching the theme)",
-    "body": "A 100-200 word emotional narrative. Correspond to each panel, giving each scene emotional value. End with an uplifting reflection that resonates. Write as cohesive prose, not a labeled list."
+    "body": "A poetic narrative of 50-80 words (MUST be under 250 characters). Capture the emotional essence of the journey in flowing prose. Do NOT recap each panel — instead, weave a single cohesive feeling."
   }},
   "footer_date": "YYYY-MM-DD",
   "suggested_themes": ["theme1", "theme2", "theme3"]
 }}
 ```
 
+**CRITICAL BREVITY CONSTRAINT**:
+- narrative.body MUST be under 250 characters. This is a poetic impression, not an essay.
+- Total user-facing text (theme + emotional_arc + title + body) should be around 300 characters.
+
 **Notes**:
 - panels array source_photo_index corresponds to the input material index
-- scene_description is a detailed instruction for the comic artist — include sufficient visual detail
+- scene_description is a detailed instruction for the comic artist — include sufficient visual detail (this is NOT shown to users)
 - narrative.body should have literary quality — avoid list-style writing
 - **suggested_themes**: Always provide 3 alternative theme suggestions based on actual photo content"""
 
@@ -205,25 +209,39 @@ def generate_storyboard(panel_moments: List[dict], date_str: Optional[str] = Non
 
 # ── Step 2: Generate comic-style multi-panel image ──
 
-COMIC_IMAGE_PROMPT_TEMPLATE = """Generate a warm, hand-drawn illustration style comic strip with {panel_count} panels arranged in a grid layout. The style should be gentle watercolor-meets-digital-illustration, with soft warm tones, slightly rounded character designs, and cozy atmosphere — similar to a "slice of life" manga or children's picture book.
+COMIC_IMAGE_PROMPT_TEMPLATE = """Generate a warm, hand-drawn illustration style comic page with {panel_count} panels in a DYNAMIC MANGA LAYOUT. The style should be gentle watercolor-meets-digital-illustration, with soft warm tones, slightly rounded character designs, and cozy atmosphere — similar to a "slice of life" manga or children's picture book.
 
 Overall theme: "{theme}"
 Emotional arc: "{emotional_arc}"
 
-Panel descriptions (in order, left-to-right, top-to-bottom):
+Panel descriptions (arrange according to emotional weight, NOT in a uniform grid):
 {panel_descriptions}
 
+MANGA PANEL LAYOUT (Japanese comic composition — CRITICAL):
+- VARY panel sizes dramatically — the emotional climax panel should be 2-3x LARGER than other panels
+- Use IRREGULAR, asymmetric arrangements — absolutely NO uniform grids or equal-sized panels
+- Include at least one of: diagonal panel borders, L-shaped panels, or a panel that breaks/overlaps conventional borders
+- Panel borders: thin black lines, but vary their angles — not all perpendicular
+- Leave white gutter space between panels (manga tradition)
+- Mix wide HORIZONTAL panels (landscapes, establishing shots) with tall VERTICAL panels (close-ups, character focus)
+
+EMOTIONAL PANEL SIZING:
+- Quiet/transitional moments → smaller, compact panels
+- Dramatic/emotional peaks → the LARGEST panel, possibly breaking conventional borders
+- Opening → a wider establishing shot panel
+- Climax → hero panel, at least 30% of the page area
+- Create visual rhythm through dramatic size contrast between adjacent panels
+
 CRITICAL REQUIREMENTS:
-- All {panel_count} panels must be in a SINGLE image, arranged as a {grid_layout} grid
-- Each panel should have a thin white border/frame separating it
+- All {panel_count} panels must be in a SINGLE image with dynamic manga-style layout
 - Consistent character appearance across panels (same clothing, hair, build)
 - Warm color palette: golden yellows, soft oranges, gentle greens, twilight purples
 - Hand-drawn line quality with subtle texture
 - No text or speech bubbles in the panels
-- Aspect ratio: 3:4 portrait (for the overall grid image)
+- Aspect ratio: 3:4 portrait (for the overall page)
 - The overall mood should be warm, nostalgic, and life-affirming
 
-Style anchor: A warm slice-of-life comic strip with gentle watercolor illustration style, evoking the feeling of a cherished photo album rendered as art."""
+Style anchor: A warm slice-of-life manga page with dynamic irregular paneling and gentle watercolor illustration style, evoking the feeling of a cherished photo album rendered as art."""
 
 
 def generate_comic_image(
@@ -244,9 +262,6 @@ def generate_comic_image(
     theme = storyboard.get("theme", "Life Comic")
     emotional_arc = storyboard.get("emotional_arc", "")
 
-    grid_map = {1: "1x1", 2: "1x2", 3: "1x3", 4: "2x2", 5: "2x3", 6: "2x3", 7: "2x4", 8: "2x4", 9: "3x3"}
-    grid_layout = grid_map.get(panel_count, "2x3")
-
     panel_descs = ""
     for i, p in enumerate(panels):
         desc = p.get("scene_description", "")
@@ -259,7 +274,6 @@ def generate_comic_image(
         theme=theme,
         emotional_arc=emotional_arc,
         panel_descriptions=panel_descs,
-        grid_layout=grid_layout,
     )
 
     parts: list[types.Part] = []

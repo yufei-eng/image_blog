@@ -62,11 +62,18 @@ def _install_chromium() -> bool:
 
 
 def _screenshot_html(html_path: str, png_path: str, width: int = 480, scale: int = 2) -> bool:
-    """Take a full-page screenshot of an HTML file via Playwright. Returns True on success."""
+    """Take a full-page screenshot of an HTML file via Playwright. Returns True on success.
+
+    Chromium caps screenshots at 32767px per dimension. When the rendered page
+    (height * device_scale_factor) would exceed that limit, we automatically
+    fall back to scale=1 to stay within bounds.
+    """
     if not _ensure_playwright():
         return False
 
     from playwright.sync_api import sync_playwright
+
+    MAX_DIM = 32767
 
     for attempt in range(2):
         try:
@@ -77,7 +84,21 @@ def _screenshot_html(html_path: str, png_path: str, width: int = 480, scale: int
                     device_scale_factor=scale,
                 )
                 page.goto(f"file://{os.path.abspath(html_path)}")
-                page.wait_for_timeout(1200)
+                page.wait_for_timeout(1500)
+
+                body_height = page.evaluate("document.body.scrollHeight")
+                effective_height = body_height * scale
+                if effective_height > MAX_DIM:
+                    print(f"  [INFO] Page height {body_height}px × {scale}x = {effective_height}px exceeds {MAX_DIM}px limit, retrying with scale=1")
+                    browser.close()
+                    browser = p.chromium.launch()
+                    page = browser.new_page(
+                        viewport={"width": width, "height": 800},
+                        device_scale_factor=1,
+                    )
+                    page.goto(f"file://{os.path.abspath(html_path)}")
+                    page.wait_for_timeout(1500)
+
                 page.screenshot(path=png_path, full_page=True)
                 browser.close()
             return os.path.exists(png_path)

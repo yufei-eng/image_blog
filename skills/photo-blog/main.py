@@ -59,6 +59,7 @@ def analysis_to_dict(a: PhotoAnalysis) -> dict:
         "time_of_day": a.time_of_day,
         "objects": a.objects,
         "narrative_hook": a.narrative_hook,
+        "orientation_correct": a.orientation_correct,
         "score": a.score.composite,
         "tier": a.score.tier,
     }
@@ -142,6 +143,7 @@ def main():
         print(f"  Suggested themes: {', '.join(suggested)}")
 
     highlight_paths = [h.file_path for h in highlights]
+    orientation_flags = [h.orientation_correct for h in highlights]
     output_base = os.path.splitext(args.output)[0]
     output_dir = args.output_dir or os.path.dirname(os.path.abspath(args.output)) or "."
     os.makedirs(output_dir, exist_ok=True)
@@ -161,7 +163,7 @@ def main():
     html_output = None
 
     if args.format in ("html", "all"):
-        html_output = render_blog_html(blog_content, highlight_paths, args.output, cover_path=cover_path)
+        html_output = render_blog_html(blog_content, highlight_paths, args.output, cover_path=cover_path, orientation_flags=orientation_flags)
         generated_files["html"] = html_output
         print(f"\n  [HTML] {html_output}")
 
@@ -176,7 +178,7 @@ def main():
         from png_renderer import render_blog_png
         png_path = output_base + ".png"
         if not html_output:
-            html_output = render_blog_html(blog_content, highlight_paths, output_base + "_tmp.html", cover_path=cover_path)
+            html_output = render_blog_html(blog_content, highlight_paths, output_base + "_tmp.html", cover_path=cover_path, orientation_flags=orientation_flags)
         result = render_blog_png(blog_content, highlight_paths, png_path, html_path=html_output)
         if result:
             generated_files["png"] = png_path

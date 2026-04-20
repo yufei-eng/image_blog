@@ -53,16 +53,16 @@ BLOG_GENERATION_PROMPT = """You are a content creator with both artistic sensibi
   "title": "A poetic title of 3-6 words (e.g., 'Afternoon Among the Peaks', 'Rainy Lanes & Red Broth')",
   "hero_image_index": 0,
   "description": {{
-    "text": "A coherent 2-4 sentence narrative covering time, place, actions, and atmosphere, in an evocative, warm style",
+    "text": "One evocative atmospheric sentence that sets the mood for the entire blog.",
     "image_index": 0
   }},
   "insights": [
     {{
-      "text": "A 2-3 sentence insight for this photo, describing scene details and reflections with vivid imagery",
+      "text": "1-2 concise, evocative sentences about this photo. Capture its unique mood or detail — keep it punchy, not an essay.",
       "image_index": 0
     }}
   ],
-  "tip": "A 1-2 sentence personalized practical tip based on the scene (outdoor/indoor/food/travel etc.)",
+  "tip": "1-2 practical sentences with a useful takeaway related to the photos.",
   "footer_date": "YYYY-MM-DD",
   "suggested_themes": ["theme1", "theme2", "theme3"]
 }}
@@ -73,9 +73,9 @@ BLOG_GENERATION_PROMPT = """You are a content creator with both artistic sensibi
 - hero_image_index points to the best hero photo in the highlights array
 - description.image_index also points to the highlights array
 - Title should be concise and evocative — not too long
-- Each insight text must be unique, with different focus areas covering various scene dimensions
-- **Important**: Titles must be creative and distinctive. Avoid overused clichés. Draw unique imagery from the photo scenes — landscapes, culinary memories, light and shadow, travel moods, etc.
-- **suggested_themes**: Always provide 3 alternative theme suggestions based on actual photo content (short phrases). These help the user explore different angles."""
+- Each insight text must be unique, covering different dimensions of the scene
+- **Important**: Titles must be creative and distinctive. Avoid overused clichés.
+- **suggested_themes**: Always provide 3 alternative theme suggestions based on actual photo content (short phrases)."""
 
 
 def _detect_lang(text: str) -> str:

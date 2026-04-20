@@ -94,6 +94,7 @@ class PhotoAnalysis:
     time_of_day: str = ""
     objects: str = ""
     narrative_hook: str = ""
+    orientation_correct: bool = True
     score: PhotoScore = field(default_factory=PhotoScore)
 
 
@@ -115,6 +116,7 @@ For each photo, output the following JSON format (return a JSON array):
     "time_of_day": "Inferred time of day (e.g., dawn, afternoon, dusk, night)",
     "objects": "Key objects / food / architecture in the frame",
     "narrative_hook": "The most compelling narrative point of this photo (one sentence, evocative style)",
+    "orientation_correct": true,
     "scores": {
       "visual_appeal": 7.5,
       "story_value": 8.0,
@@ -125,6 +127,11 @@ For each photo, output the following JSON format (return a JSON array):
   }
 ]
 ```
+
+**orientation_correct**: Look at the image as displayed. Is the orientation natural and correct?
+- true = the image looks correct (people standing upright, text readable, horizon level)
+- false = the image appears rotated or sideways (e.g., a landscape photo displayed as portrait, people tilted 90°, food plate on its side)
+This is critical for detecting photos where EXIF orientation was incorrectly applied.
 
 Scoring criteria (1-10):
 - visual_appeal: composition aesthetics, color, lighting
@@ -263,6 +270,7 @@ def analyze_photos(image_paths: List[str], batch_size: int = BATCH_SIZE) -> List
                     time_of_day=r.get("time_of_day", ""),
                     objects=r.get("objects", ""),
                     narrative_hook=r.get("narrative_hook", ""),
+                    orientation_correct=r.get("orientation_correct", True),
                     score=score,
                 )
             else:
