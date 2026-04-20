@@ -218,15 +218,27 @@ def generate_storyboard(panel_moments: List[dict], date_str: Optional[str] = Non
     return sb
 
 
+def _truncate_at_sentence(text: str, limit: int) -> str:
+    """Truncate text at the last complete sentence within the limit."""
+    if len(text) <= limit:
+        return text
+    candidate = text[:limit]
+    for sep in [". ", "。", "! ", "? ", "！", "？"]:
+        pos = candidate.rfind(sep)
+        if pos > 0:
+            return candidate[:pos + len(sep)].rstrip()
+    return candidate.rsplit(" ", 1)[0] + "…"
+
+
 def _enforce_narrative_limits(sb: dict):
-    """Truncate narrative fields that exceed character limits."""
+    """Truncate narrative fields at sentence boundaries if they exceed limits."""
     narr = sb.get("narrative", {})
     body = narr.get("body", "")
     if len(body) > 250:
-        narr["body"] = body[:250].rsplit(" ", 1)[0] + "…"
+        narr["body"] = _truncate_at_sentence(body, 250)
     arc = sb.get("emotional_arc", "")
     if len(arc) > 100:
-        sb["emotional_arc"] = arc[:100].rsplit(" ", 1)[0] + "…"
+        sb["emotional_arc"] = _truncate_at_sentence(arc, 100)
 
 
 # ── Step 2: Generate comic-style multi-panel image ──

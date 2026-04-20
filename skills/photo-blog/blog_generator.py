@@ -218,16 +218,28 @@ def generate_blog_content(
     return blog
 
 
+def _truncate_at_sentence(text: str, limit: int) -> str:
+    """Truncate text at the last complete sentence within the limit."""
+    if len(text) <= limit:
+        return text
+    candidate = text[:limit]
+    for sep in [". ", "。", "! ", "? ", "！", "？"]:
+        pos = candidate.rfind(sep)
+        if pos > 0:
+            return candidate[:pos + len(sep)].rstrip()
+    return candidate.rsplit(" ", 1)[0] + "…"
+
+
 def _enforce_char_limits(blog: dict, limit: int = 150):
-    """Truncate text fields that exceed the character limit."""
+    """Truncate text fields at sentence boundaries if they exceed the limit."""
     desc = blog.get("description", {})
     if isinstance(desc, dict) and len(desc.get("text", "")) > limit:
-        desc["text"] = desc["text"][:limit].rsplit(" ", 1)[0] + "…"
+        desc["text"] = _truncate_at_sentence(desc["text"], limit)
     for ins in blog.get("insights", []):
         if len(ins.get("text", "")) > limit:
-            ins["text"] = ins["text"][:limit].rsplit(" ", 1)[0] + "…"
+            ins["text"] = _truncate_at_sentence(ins["text"], limit)
     if len(blog.get("tip", "")) > limit:
-        blog["tip"] = blog["tip"][:limit].rsplit(" ", 1)[0] + "…"
+        blog["tip"] = _truncate_at_sentence(blog["tip"], limit)
 
 
 def _fallback_content(highlights: List[dict], date_str: str, lang: str = "en") -> dict:
