@@ -26,9 +26,17 @@ def _load_config() -> dict:
 
 def _get_client(cfg: dict):
     api_cfg = cfg.get("compass_api", {})
-    token = os.environ.get("COMPASS_CLIENT_TOKEN", api_cfg.get("client_token", ""))
-    base_url = api_cfg.get("base_url", "")
-    return genai.Client(api_key=token, http_options=types.HttpOptions(base_url=base_url))
+    token = (os.environ.get("COMPASS_CLIENT_TOKEN")
+             or os.environ.get("COMPASS_API_KEY")
+             or os.environ.get("ANTHROPIC_API_KEY")
+             or os.environ.get("GOOGLE_API_KEY")
+             or os.environ.get("GEMINI_API_KEY")
+             or api_cfg.get("client_token", ""))
+    base_url = (os.environ.get("COMPASS_BASE_URL")
+                or os.environ.get("ANTHROPIC_BASE_URL")
+                or api_cfg.get("base_url", ""))
+    http_opts = types.HttpOptions(base_url=base_url) if base_url else None
+    return genai.Client(api_key=token, http_options=http_opts)
 
 
 BLOG_GENERATION_PROMPT = """You are a content creator with both artistic sensibility and lifestyle aesthetics. Based on the following photo analysis data, generate a "Photo Blog" post.
